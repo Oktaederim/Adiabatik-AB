@@ -1,22 +1,30 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- HILFSFUNKTION (Muss vor der Verwendung definiert werden) ---
-    function qs(selector) { return document.querySelector(selector); }
+    // --- DOM-Elemente direkt und einzeln definieren, um Fehlerquellen zu minimieren ---
+    const wirkungsgradInput = document.getElementById('wirkungsgrad');
+    const volumenstromInput = document.getElementById('volumenstrom');
+    const liveTempInInput = document.getElementById('live-temp-in');
+    const liveRhInInput = document.getElementById('live-rh-in');
 
-    // --- DOM-Elemente ---
-    const dom = {
-        wirkungsgrad: document.getElementById('wirkungsgrad'),
-        volumenstrom: document.getElementById('volumenstrom'),
-        liveTempIn: document.getElementById('live-temp-in'),
-        liveRhIn: document.getElementById('live-rh-in'),
-        waterLive: document.getElementById('res-water-live'),
-        powerLive: document.getElementById('res-power-live'),
-        tempOut: document.getElementById('res-temp-out'),
-        rhOut: document.getElementById('res-rh-out'),
-        tdpOut: document.getElementById('res-tdp-out'),
-        in: { T: qs('#vis-t-in'), RH: qs('#vis-rh-in'), x: qs('#vis-x-in'), h: qs('#vis-h-in'), Twb: qs('#vis-twb-in'), Tdp: qs('#vis-tdp-in') },
-        out: { T: qs('#vis-t-out'), RH: qs('#vis-rh-out'), x: qs('#vis-x-out'), h: qs('#vis-h-out'), Twb: qs('#vis-twb-out'), Tdp: qs('#vis-tdp-out') },
-    };
+    const waterLiveOutput = document.getElementById('res-water-live');
+    const powerLiveOutput = document.getElementById('res-power-live');
+    const tempOutOutput = document.getElementById('res-temp-out');
+    const rhOutOutput = document.getElementById('res-rh-out');
+    const tdpOutOutput = document.getElementById('res-tdp-out');
+
+    const vis_t_in = document.getElementById('vis-t-in');
+    const vis_rh_in = document.getElementById('vis-rh-in');
+    const vis_x_in = document.getElementById('vis-x-in');
+    const vis_h_in = document.getElementById('vis-h-in');
+    const vis_twb_in = document.getElementById('vis-twb-in');
+    const vis_tdp_in = document.getElementById('vis-tdp-in');
+
+    const vis_t_out = document.getElementById('vis-t-out');
+    const vis_rh_out = document.getElementById('vis-rh-out');
+    const vis_x_out = document.getElementById('vis-x-out');
+    const vis_h_out = document.getElementById('vis-h-out');
+    const vis_twb_out = document.getElementById('vis-twb-out');
+    const vis_tdp_out = document.getElementById('vis-tdp-out');
 
     // --- Konstanten ---
     const RHO_LUFT = 1.2, DRUCK = 101325;
@@ -31,29 +39,36 @@ document.addEventListener('DOMContentLoaded', () => {
         let low = getTd(x, p), high = T;
         if (high - low < 0.01) return T;
         for (let i = 0; i < 15; i++) {
-            let mid = (low + high) / 2; let h_mid = getH(mid, getX(mid, 100, p));
+            let mid = (low + high) / 2;
+            let h_mid = getH(mid, getX(mid, 100, p));
             if (h_mid < h_target) low = mid; else high = mid;
         }
         return (low + high) / 2;
     };
     const getRh = (T, x, p) => Math.min(100, (100 * (p * x) / (622 + x)) / getPs(T));
-    
+
     // --- Hauptfunktion ---
     function runAllCalculations() {
-        // Parameter einlesen
-        const eta = parseFloat(dom.wirkungsgrad.value) / 100;
-        const vol = parseFloat(dom.volumenstrom.value);
-        const T_in = parseFloat(dom.liveTempIn.value);
-        const RH_in = parseFloat(dom.liveRhIn.value);
+        // Sicherstellen, dass alle Elemente geladen sind, bevor wir darauf zugreifen
+        if (!wirkungsgradInput || !volumenstromInput || !liveTempInInput || !liveRhInInput) {
+            console.error("Ein oder mehrere Eingabeelemente wurden nicht im DOM gefunden.");
+            return;
+        }
+
+        const eta = parseFloat(wirkungsgradInput.value) / 100;
+        const vol = parseFloat(volumenstromInput.value);
+        const T_in = parseFloat(liveTempInInput.value);
+        const RH_in = parseFloat(liveRhInInput.value);
         
-        if (isNaN(eta) || isNaN(vol) || isNaN(T_in) || isNaN(RH_in)) return;
+        if (isNaN(eta) || isNaN(vol) || isNaN(T_in) || isNaN(RH_in)) {
+             console.warn("Eine oder mehrere Eingaben sind ungültig.");
+            return;
+        }
         
         const massenstrom = (vol / 3600) * RHO_LUFT;
 
         // Zustand VOR Befeuchter
-        const state_in = {};
-        state_in.T = T_in;
-        state_in.RH = RH_in;
+        const state_in = { T: T_in, RH: RH_in };
         state_in.x = getX(state_in.T, state_in.RH, DRUCK);
         state_in.h = getH(state_in.T, state_in.x);
         state_in.Twb = getTwb(state_in.T, state_in.x, DRUCK);
@@ -82,32 +97,34 @@ document.addEventListener('DOMContentLoaded', () => {
         const f = (num, dec=1) => isNaN(num) ? '--' : num.toLocaleString('de-DE', { minimumFractionDigits: dec, maximumFractionDigits: dec });
         
         // Ergebnisbox
-        dom.waterLive.textContent = f(data.wasser_l_h, 2);
-        dom.powerLive.textContent = f(data.leistung_kW, 1);
-        dom.tempOut.textContent = f(data.state_out.T, 1);
-        dom.rhOut.textContent = f(data.state_out.RH, 1);
-        dom.tdpOut.textContent = f(data.state_out.Tdp, 1);
+        waterLiveOutput.textContent = f(data.wasser_l_h, 2);
+        powerLiveOutput.textContent = f(data.leistung_kW, 1);
+        tempOutOutput.textContent = f(data.state_out.T, 1);
+        rhOutOutput.textContent = f(data.state_out.RH, 1);
+        tdpOutOutput.textContent = f(data.state_out.Tdp, 1);
 
         // Visualisierung
-        dom.in.T.textContent = `${f(data.state_in.T)} °C`;
-        dom.in.RH.textContent = `${f(data.state_in.RH)} %`;
-        dom.in.x.textContent = `${f(data.state_in.x, 2)} g/kg`;
-        dom.in.h.textContent = `${f(data.state_in.h, 2)} kJ/kg`;
-        dom.in.Twb.textContent = `${f(data.state_in.Twb)} °C`;
-        dom.in.Tdp.textContent = `${f(data.state_in.Tdp)} °C`;
+        vis_t_in.textContent = `${f(data.state_in.T)} °C`;
+        vis_rh_in.textContent = `${f(data.state_in.RH)} %`;
+        vis_x_in.textContent = `${f(data.state_in.x, 2)} g/kg`;
+        vis_h_in.textContent = `${f(data.state_in.h, 2)} kJ/kg`;
+        vis_twb_in.textContent = `${f(data.state_in.Twb)} °C`;
+        vis_tdp_in.textContent = `${f(data.state_in.Tdp)} °C`;
 
-        dom.out.T.textContent = `${f(data.state_out.T)} °C`;
-        dom.out.RH.textContent = `${f(data.state_out.RH, 1)} %`;
-        dom.out.x.textContent = `${f(data.state_out.x, 2)} g/kg`;
-        dom.out.h.textContent = `${f(data.state_out.h, 2)} kJ/kg`;
-        dom.out.Twb.textContent = `${f(data.state_out.Twb)} °C`;
-        dom.out.Tdp.textContent = `${f(data.state_out.Tdp)} °C`;
+        vis_t_out.textContent = `${f(data.state_out.T)} °C`;
+        vis_rh_out.textContent = `${f(data.state_out.RH, 1)} %`;
+        vis_x_out.textContent = `${f(data.state_out.x, 2)} g/kg`;
+        vis_h_out.textContent = `${f(data.state_out.h, 2)} kJ/kg`;
+        vis_twb_out.textContent = `${f(data.state_out.Twb)} °C`;
+        vis_tdp_out.textContent = `${f(data.state_out.Tdp)} °C`;
     }
     
     // --- Initialisierung & Event Listeners ---
-    const allInputs = document.querySelectorAll('input');
+    const allInputs = [wirkungsgradInput, volumenstromInput, liveTempInInput, liveRhInInput];
     allInputs.forEach(input => {
-        input.addEventListener('input', runAllCalculations);
+        if (input) {
+            input.addEventListener('input', runAllCalculations);
+        }
     });
 
     runAllCalculations(); // Erster Lauf bei Seitenaufruf
