@@ -27,7 +27,8 @@ document.addEventListener('DOMContentLoaded', () => {
     const vis_tdp_out = document.getElementById('vis-tdp-out');
 
     // --- Konstanten ---
-    const RHO_LUFT = 1.2, DRUCK = 101325;
+    const RHO_LUFT = 1.2,
+        DRUCK = 101325;
 
     // --- Psychrometrische Funktionen ---
     const getPs = T => 611.2 * Math.exp((17.62 * T) / (243.12 + T));
@@ -36,12 +37,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const getTd = (x, p) => (243.12 * Math.log(((p * x) / (622 + x)) / 611.2)) / (17.62 - Math.log(((p * x) / (622 + x)) / 611.2));
     const getTwb = (T, x, p) => {
         const h_target = getH(T, x);
-        let low = getTd(x, p), high = T;
+        let low = getTd(x, p),
+            high = T;
         if (high - low < 0.01) return T;
         for (let i = 0; i < 15; i++) {
             let mid = (low + high) / 2;
             let h_mid = getH(mid, getX(mid, 100, p));
-            if (h_mid < h_target) low = mid; else high = mid;
+            if (h_mid < h_target) low = mid;
+            else high = mid;
         }
         return (low + high) / 2;
     };
@@ -59,16 +62,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const vol = parseFloat(volumenstromInput.value);
         const T_in = parseFloat(liveTempInInput.value);
         const RH_in = parseFloat(liveRhInInput.value);
-        
+
         if (isNaN(eta) || isNaN(vol) || isNaN(T_in) || isNaN(RH_in)) {
-             console.warn("Eine oder mehrere Eingaben sind ungültig.");
+            console.warn("Eine oder mehrere Eingaben sind ungültig.");
             return;
         }
-        
+
         const massenstrom = (vol / 3600) * RHO_LUFT;
 
         // Zustand VOR Befeuchter
-        const state_in = { T: T_in, RH: RH_in };
+        const state_in = {
+            T: T_in,
+            RH: RH_in
+        };
         state_in.x = getX(state_in.T, state_in.RH, DRUCK);
         state_in.h = getH(state_in.T, state_in.x);
         state_in.Twb = getTwb(state_in.T, state_in.x, DRUCK);
@@ -89,13 +95,21 @@ document.addEventListener('DOMContentLoaded', () => {
         const leistung_kW = massenstrom * cp_moist * (state_in.T - state_out.T);
 
         // Render-Funktion aufrufen
-        render({ state_in, state_out, wasser_l_h, leistung_kW });
+        render({
+            state_in,
+            state_out,
+            wasser_l_h,
+            leistung_kW
+        });
     }
 
     // --- Render-Funktion ---
     function render(data) {
-        const f = (num, dec=1) => isNaN(num) ? '--' : num.toLocaleString('de-DE', { minimumFractionDigits: dec, maximumFractionDigits: dec });
-        
+        const f = (num, dec = 1) => isNaN(num) ? '--' : num.toLocaleString('de-DE', {
+            minimumFractionDigits: dec,
+            maximumFractionDigits: dec
+        });
+
         // Ergebnisbox
         waterLiveOutput.textContent = f(data.wasser_l_h, 2);
         powerLiveOutput.textContent = f(data.leistung_kW, 1);
@@ -118,7 +132,7 @@ document.addEventListener('DOMContentLoaded', () => {
         vis_twb_out.textContent = `${f(data.state_out.Twb)} °C`;
         vis_tdp_out.textContent = `${f(data.state_out.Tdp)} °C`;
     }
-    
+
     // --- Initialisierung & Event Listeners ---
     const allInputs = [wirkungsgradInput, volumenstromInput, liveTempInInput, liveRhInInput];
     allInputs.forEach(input => {
