@@ -1,9 +1,9 @@
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- DOM-Elemente ---
-    // Die Hilfsfunktion 'qs' wird hier definiert und danach korrekt verwendet.
+    // --- HILFSFUNKTION (Muss vor der Verwendung definiert werden) ---
     function qs(selector) { return document.querySelector(selector); }
 
+    // --- DOM-Elemente ---
     const dom = {
         wirkungsgrad: document.getElementById('wirkungsgrad'),
         volumenstrom: document.getElementById('volumenstrom'),
@@ -45,9 +45,10 @@ document.addEventListener('DOMContentLoaded', () => {
         const vol = parseFloat(dom.volumenstrom.value);
         const T_in = parseFloat(dom.liveTempIn.value);
         const RH_in = parseFloat(dom.liveRhIn.value);
-        const massenstrom = (vol / 3600) * RHO_LUFT;
-
+        
         if (isNaN(eta) || isNaN(vol) || isNaN(T_in) || isNaN(RH_in)) return;
+        
+        const massenstrom = (vol / 3600) * RHO_LUFT;
 
         // Zustand VOR Befeuchter
         const state_in = {};
